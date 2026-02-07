@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ECG Health Assessment{% endblock %}</title>
+    <title>{% block title %}ECG Scan Helper{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="brand">ECG<span class="accent">Health</span></a>
+            <a href="/" class="brand">ECG <span class="accent">Scan Helper</span></a>
         </div>
     </nav>
     <main class="container">
@@ -21,9 +23,10 @@
     </main>
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2026 ECG Digital Health Assessment System</p>
+            <p>&copy; 2026 ECG Scan Helper</p>
         </div>
     </footer>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
+
 </html>

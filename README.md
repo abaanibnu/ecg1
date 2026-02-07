@@ -1,4 +1,4 @@
-# ECG Digital Health Assessment System
+# ECG Scan Helper
 
 A web-based tool to convert ECG paper images into digital signals and analyze them for heart anomalies.
 
