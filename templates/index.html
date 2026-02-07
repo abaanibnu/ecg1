@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+    <h1>Digital ECG Health Assessment</h1>
+    <p>Upload your ECG scan to get instant digital analysis, heart rate calculation, and health insights.</p>
+</section>
+
+<div class="container">
+    <div class="upload-section" id="drop-zone">
+        <div class="upload-icon">📄</div>
+        <h3>Drag & Drop your ECG image here</h3>
+        <p>or click to browse</p>
+        <input type="file" id="file-input" class="hidden" accept="image/png, image/jpeg, image/jpg">
+    </div>
+
+    <div id="loading" class="hidden" style="text-align: center; margin-bottom: 2rem;">
+        <p>Analyzing ECG... Please wait.</p>
+    </div>
+
+    <div id="results" class="hidden">
+        <div class="results-section">
+            <div class="card">
+                <h2>ECG Waveform</h2>
+                <div id="chart-container">
+                    <canvas id="ecgChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Analysis Results</h2>
+
+                <div class="metric">
+                    <span class="metric-label">Heart Rate</span>
+                    <div class="metric-value"><span id="bpm-value">--</span> <span
+                            style="font-size: 1rem; color: var(--text-muted);">BPM</span></div>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-label">Condition</span>
+                    <div id="condition-badge" class="status-badge status-normal">Normal</div>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-label">Stress Level</span>
+                    <div id="stress-value" style="font-weight: 600;">--</div>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <span class="metric-label">Recommendation</span>
+                    <p id="recommendation-text" style="font-size: 0.9rem;">--</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
