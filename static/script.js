@@ -15,39 +15,109 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedFile = null;
 
-    if (!dropZone) return; // Only run on upload page
+    if (dropZone) {
+        // Drag & Drop Handlers
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
 
-    // Drag & Drop Handlers
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-    });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
 
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('dragover');
-    });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFileSelection(e.dataTransfer.files[0]);
+            }
+        });
 
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        if (e.dataTransfer.files.length) {
-            handleFileSelection(e.dataTransfer.files[0]);
-        }
-    });
+        // Click to browse
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'BUTTON') {
+                fileInput.click();
+            }
+        });
 
-    // Click to browse
-    dropZone.addEventListener('click', (e) => {
-        // Prevent clicking if we clicked the buttons inside
-        if (e.target.tagName !== 'BUTTON') {
-            fileInput.click();
-        }
-    });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
 
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) {
-            handleFileSelection(e.target.files[0]);
-        }
-    });
+        btnRemove.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            previewSection.classList.add('hidden');
+            dropZone.classList.remove('hidden');
+            hideError();
+        });
+
+        btnProceed.addEventListener('click', () => {
+            if (!selectedFile) return;
+
+            // UI state: uploading
+            btnProceed.disabled = true;
+            btnRemove.classList.add('hidden');
+            progressContainer.classList.remove('hidden');
+            loadingSpinner.classList.remove('hidden');
+            hideError();
+
+            // Prepare FormData
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            // Upload using XHR
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.floor((e.loaded / e.total) * 100);
+                    progressBar.style.width = percentComplete + '%';
+                    progressText.textContent = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            localStorage.setItem('ecg_filename', response.filename || selectedFile.name);
+                            sessionStorage.setItem('ecg_filename', response.filename || selectedFile.name);
+
+                            progressBar.style.width = '100%';
+                            progressText.textContent = '100%';
+
+                            setTimeout(() => {
+                                window.location.href = '/process';
+                            }, 500);
+
+                        } else {
+                            showError(response.error || 'Upload failed');
+                            resetUploadUI();
+                        }
+                    } catch (err) {
+                        showError('Server returned an invalid response.');
+                        resetUploadUI();
+                    }
+                } else {
+                    showError('Server error during upload. Status: ' + xhr.status);
+                    resetUploadUI();
+                }
+            };
+
+            xhr.onerror = function () {
+                showError('Network error occurred during upload.');
+                resetUploadUI();
+            };
+
+            xhr.send(formData);
+        });
+    }
 
     function handleFileSelection(file) {
         // File type validation
@@ -72,103 +142,38 @@ document.addEventListener('DOMContentLoaded', () => {
             btnProceed.disabled = false;
 
             // Reset Progress UI
-            progressContainer.classList.add('hidden');
-            loadingSpinner.classList.add('hidden');
-            progressBar.style.width = '0%';
-            progressText.textContent = '0%';
+            if (progressContainer && loadingSpinner && progressBar && progressText) {
+                progressContainer.classList.add('hidden');
+                loadingSpinner.classList.add('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+            }
         };
         reader.readAsDataURL(file);
     }
 
-    btnRemove.addEventListener('click', () => {
-        selectedFile = null;
-        fileInput.value = '';
-        previewSection.classList.add('hidden');
-        dropZone.classList.remove('hidden');
-        hideError();
-    });
-
-    btnProceed.addEventListener('click', () => {
-        if (!selectedFile) return;
-
-        // UI state: uploading
-        btnProceed.disabled = true;
-        btnRemove.classList.add('hidden');
-        progressContainer.classList.remove('hidden');
-        loadingSpinner.classList.remove('hidden');
-        hideError();
-
-        // Prepare FormData
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-
-        // Upload using XHR
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/upload', true);
-
-        xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-                const percentComplete = Math.floor((e.loaded / e.total) * 100);
-                progressBar.style.width = percentComplete + '%';
-                progressText.textContent = percentComplete + '%';
-            }
-        };
-
-        xhr.onload = function () {
-            if (xhr.status === 200) {
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    if (response.success) {
-                        // Store filename in localStorage/sessionStorage
-                        localStorage.setItem('ecg_filename', response.filename || selectedFile.name);
-                        sessionStorage.setItem('ecg_filename', response.filename || selectedFile.name);
-
-                        // Fake a little delay for the "processing" feel and full progress bar
-                        progressBar.style.width = '100%';
-                        progressText.textContent = '100%';
-
-                        setTimeout(() => {
-                            window.location.href = '/process';
-                        }, 500);
-
-                    } else {
-                        showError(response.error || 'Upload failed');
-                        resetUploadUI();
-                    }
-                } catch (err) {
-                    showError('Server returned an invalid response.');
-                    resetUploadUI();
-                }
-            } else {
-                showError('Server error during upload. Status: ' + xhr.status);
-                resetUploadUI();
-            }
-        };
-
-        xhr.onerror = function () {
-            showError('Network error occurred during upload.');
-            resetUploadUI();
-        };
-
-        xhr.send(formData);
-    });
-
     function showError(msg) {
-        validationMsg.textContent = msg;
-        validationMsg.classList.remove('hidden');
+        if (validationMsg) {
+            validationMsg.textContent = msg;
+            validationMsg.classList.remove('hidden');
+        }
     }
 
     function hideError() {
-        validationMsg.classList.add('hidden');
+        if (validationMsg) {
+            validationMsg.classList.add('hidden');
+        }
     }
 
     function resetUploadUI() {
-        btnProceed.disabled = false;
-        btnRemove.classList.remove('hidden');
-        progressContainer.classList.add('hidden');
-        loadingSpinner.classList.add('hidden');
-        progressBar.style.width = '0%';
-        progressText.textContent = '0%';
+        if (btnProceed && btnRemove && progressContainer && loadingSpinner && progressBar && progressText) {
+            btnProceed.disabled = false;
+            btnRemove.classList.remove('hidden');
+            progressContainer.classList.add('hidden');
+            loadingSpinner.classList.add('hidden');
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+        }
     }
 
     // --- Dashboard Logic ---
@@ -198,6 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        let latestAnalysis = null;
+
         // Fetch analysis from backend
         fetch('/api/process', {
             method: 'POST',
@@ -207,6 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    latestAnalysis = data.analysis;
                     renderDashboard(data);
                 } else {
                     alert('Analysis failed: ' + data.error);
@@ -322,6 +330,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
             btnResetZoom.addEventListener('click', () => {
                 ecgChart.resetZoom();
+            });
+        }
+
+        // PDF Generation Logic
+        const btnDownloadPdf = document.getElementById('btn-download-pdf');
+        const pdfSpinner = document.getElementById('pdf-spinner');
+
+        if (btnDownloadPdf) {
+            btnDownloadPdf.addEventListener('click', () => {
+                if (!latestAnalysis) return;
+
+                // UI Loading State
+                btnDownloadPdf.disabled = true;
+                pdfSpinner.classList.remove('hidden');
+
+                // 1. Capture Chart Image
+                // We reset zoom first to ensure the full waveform is captured in the report
+                if (ecgChart) ecgChart.resetZoom();
+
+                const chartCanvas = document.getElementById('ecgChart');
+                const chartImage = chartCanvas.toDataURL('image/png');
+
+                // 2. Gather Patient Data
+                const patientData = {
+                    name: document.getElementById('patient-name').value || 'N/A',
+                    age: document.getElementById('patient-age').value || 'N/A',
+                    gender: document.getElementById('patient-gender').value || 'N/A'
+                };
+
+                // 3. Send to Backend
+                fetch('/generate-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        patient: patientData,
+                        analysis: latestAnalysis,
+                        chartImage: chartImage
+                    })
+                })
+                    .then(response => {
+                        if (response.ok) return response.blob();
+                        throw new Error('PDF generation failed');
+                    })
+                    .then(blob => {
+                        // Create download link
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                        a.href = url;
+                        a.download = `ECG_Medical_Report_${timestamp}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        a.remove();
+                    })
+                    .catch(err => {
+                        console.error('PDF Error:', err);
+                        alert('Error generating PDF report. Please try again.');
+                    })
+                    .finally(() => {
+                        // Reset UI State
+                        btnDownloadPdf.disabled = false;
+                        pdfSpinner.classList.add('hidden');
+                    });
             });
         }
     }
