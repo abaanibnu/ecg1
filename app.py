@@ -35,20 +35,35 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
-        # Process image
-        try:
-            signal_data = process_ecg_image(filepath)
-            analysis_results = analyze_ecg_signal(signal_data)
-            return jsonify({
-                'success': True,
-                'signal': signal_data,
-                'analysis': analysis_results
-            })
-        except Exception as e:
-            print(f"Error processing file: {e}")
-            return jsonify({'error': str(e)}), 500
+        return jsonify({'success': True, 'filename': filename})
             
     return jsonify({'error': 'File type not allowed'}), 400
+
+@app.route('/process')
+def process_page():
+    return render_template('process.html')
+
+@app.route('/api/process', methods=['POST'])
+def process_file():
+    data = request.json
+    if not data or 'filename' not in data:
+        return jsonify({'error': 'No filename provided'}), 400
+        
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(data['filename']))
+    if not os.path.exists(filepath):
+        return jsonify({'error': 'File not found'}), 404
+        
+    try:
+        signal_data = process_ecg_image(filepath)
+        analysis_results = analyze_ecg_signal(signal_data)
+        return jsonify({
+            'success': True,
+            'signal': signal_data,
+            'analysis': analysis_results
+        })
+    except Exception as e:
+        print(f"Error processing file: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

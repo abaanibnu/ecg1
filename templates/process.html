@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Signal Analysis Dashboard - ECG Scan Helper{% endblock %}
+
+{% block content %}
+<div class="dashboard-container hidden" id="dashboard-container">
+    <div class="dashboard-header animated-fade-in">
+        <h1>ECG Signal Analysis Dashboard</h1>
+        <p>Processed Signal & Health Metrics</p>
+    </div>
+
+    <!-- Alert Panel -->
+    <div id="alert-panel" class="alert-panel hidden animated-slide-down">
+        <div class="alert-icon-wrapper">
+            <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <div class="alert-content">
+            <h3 id="alert-title">Abnormal Condition Detected</h3>
+            <p id="alert-message">Please consult with a healthcare professional for a detailed evaluation.</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Section 1: ECG Waveform Visualization -->
+        <div class="card chart-card animated-fade-in">
+            <div class="card-header">
+                <h2>ECG Waveform Visualization</h2>
+                <div class="chart-controls">
+                    <button id="reset-zoom" class="btn-icon" title="Reset Zoom">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                            <path d="M3 3v5h5" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <p class="chart-subtitle">Use mouse wheel to zoom, click and drag to pan across the signal waveform.</p>
+            <div class="chart-wrapper">
+                <canvas id="ecgChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Section 2: Health Metrics Card Panel -->
+        <div class="card metrics-card animated-fade-in">
+            <h2>Health Metrics</h2>
+            <div class="metrics-list">
+
+                <div class="metric-item">
+                    <div class="metric-info">
+                        <span class="metric-label">Heart Rate</span>
+                        <div class="metric-value-container">
+                            <span class="metric-value" id="val-hr">--</span>
+                            <span class="metric-unit">BPM</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-item">
+                    <div class="metric-info">
+                        <span class="metric-label">HRV (SDNN)</span>
+                        <div class="metric-value-container">
+                            <span class="metric-value" id="val-sdnn">--</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-item">
+                    <div class="metric-info">
+                        <span class="metric-label">Stress Level</span>
+                        <div id="val-stress" class="status-pill status-loading">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="metric-item">
+                    <div class="metric-info">
+                        <span class="metric-label">Condition Status</span>
+                        <div id="val-condition" class="status-pill status-loading">Loading...</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="recommendation-box">
+                <h4>Medical Recommendation</h4>
+                <p id="val-recommendation">Processing your ECG data to provide insights...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-footer animated-fade-in">
+        <button class="btn-secondary" onclick="window.location.href='/'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Upload New ECG
+        </button>
+    </div>
+</div>
+
+<div class="loader-container" id="loader-container">
+    <div class="loader-content">
+        <div class="medical-spinner">
+            <div class="circle"></div>
+            <div class="heartbeat"></div>
+        </div>
+        <h2>Digitizing ECG Signal</h2>
+        <p>Extracting waveform data and calculating health metrics...</p>
+    </div>
+</div>
+{% endblock %}

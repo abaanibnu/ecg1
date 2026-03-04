@@ -75,6 +75,7 @@ def analyze_ecg_signal(signal_data, fs=100.0):
     
     return {
         'heart_rate': round(heart_rate, 1),
+        'sdnn_ms': round(sdnn * 1000, 1), # Conversion to ms
         'abnormality': abnormality,
         'stress_level': stress_level,
         'recommendation': recommendation
